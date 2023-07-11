@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="mountain.MountainBean">
+
+	<resultMap type="com.spring.ex.mountain.model.MountainBean" id="mountainMap">
+		<id property="mountainnum" column="mountain_num"/>
+		<result property="mountainname" column="mountain_name"/>
+		<result property="mountainheight" column="mountain_height"/>
+		<result property="mountainlocal" column="mountain_local"/>
+		<result property="mountaincontent" column="mountain_content"/>
+		<result property="mountainimage" column="mountain_image"/>
+		<result property="mountaingreat" column="mountain_great"/>
+	</resultMap>
+	
+	<!-- 최초 목록 불러오기 -->
+	<select id="GetAllMountainFirst" resultType="com.spring.ex.mountain.model.MountainBean" resultMap="mountainMap">
+		SELECT
+			mountain_num,
+			mountain_name,
+			mountain_height,
+			mountain_local,
+			mountain_content,
+			mountain_image,
+			mountain_great
+		FROM
+			mountain
+	</select>
+	<!-- //최초 목록 불러오기 -->
+
+	<!-- 산 이름 불러오기 -->
+	<select id="GetAllMountainNames" resultType="com.spring.ex.mountain.model.MountainBean" resultMap="mountainMap">
+		SELECT
+			mountain_name
+		FROM
+			mountain
+	</select>
+	<!-- //산 이름 불러오기 -->
+	
+	<!-- api 목록 삽입하기 -->
+		<insert id="InsertApi" parameterType="HashMap">
+			INSERT
+				into mountain(
+					mountain_num,
+					mountain_name,
+					mountain_height,
+					mountain_local,
+					mountain_content,
+					mountain_image,
+					mountain_great)
+			VALUES(
+				#{mountainnum},
+				#{mountainname},
+				#{mountainheight},
+				#{mountainlocal},
+				#{mountaincontent},
+				#{mountainimage},
+				#{mountaingreat}
+			)
+		</insert>
+	<!-- //api 목록 삽입하기 -->
+
+	<!-- 목록 삽입하기 -->
+		<insert id="InsertMountain">
+			INSERT
+				into mountain(
+					mountain_num,
+					mountain_name,
+					mountain_height,
+					mountain_local,
+					mountain_content,
+					mountain_image,
+					mountain_great)
+			VALUES(
+				mountain_seq.nextval,
+				#{mountainname},
+				#{mountainheight},
+				#{mountainlocal},
+				#{mountaincontent},
+				#{mountainimage},
+				#{mountaingreat, jdbcType=VARCHAR}
+			)
+		</insert>
+	<!-- //목록 삽입하기 -->
+	
+	<!-- 전체 갯수-->
+	<select id="GetMountainTotalCount" resultType="int">
+		SELECT
+			count(*)
+		FROM mountain
+		<choose>
+			<when test="whatColumn == '이름'">
+				WHERE
+					mountain_name like #{keyword}
+			</when>
+			<when test="whatColumn == '내용'">
+				WHERE
+					mountain_content like #{keyword}
+			</when>
+			<when test="whatColumn == '지역'">
+				WHERE
+					mountain_local like #{keyword}
+			</when>
+		</choose>
+		ORDER BY
+			mountain_num asc
+	</select>
+	<!-- //전체 갯수-->
+	
+	<!-- 전체 목록 불러오기 -->
+	<select id="GetAllMountain" resultType="com.spring.ex.mountain.model.MountainBean" resultMap="mountainMap">
+		SELECT
+			mountain_num,
+			mountain_name,
+			mountain_height,
+			mountain_local,
+			mountain_content,
+			mountain_image,
+			mountain_great
+		FROM
+			mountain
+		<where>
+			<choose>
+			<when test='category != null and category == "difficulty_easy"'>
+				((SELECT
+						avg(mountain_height)
+					FROM
+						mountain
+					)*1)  <![CDATA[>=]]> mountain_height
+			</when>
+			<when test='category != null and category == "difficulty_normal"'>
+				((SELECT
+						avg(mountain_height)
+					FROM
+						mountain
+					)*1)  <![CDATA[<]]> mountain_height
+				AND
+				((SELECT
+						avg(mountain_height)
+					FROM
+						mountain
+					)*2) <![CDATA[>=]]> mountain_height	
+			</when>
+			<when test='category != null and category == "difficulty_hard"'>
+				((SELECT
+						avg(mountain_height)
+					FROM
+						mountain
+					)*2) <![CDATA[<]]> mountain_height
+				AND
+				((SELECT
+						avg(mountain_height)
+					FROM
+						mountain
+					)*3) <![CDATA[>=]]> mountain_height	
+			</when>
+			</choose>
+			<if test='category != null and category == "great"'>
+				mountain_great is not null
+			</if>
+			<if test='category != null and category == "national"'>
+				mountain_content like '%국립공원%'
+			</if>
+			<if test="whatColumn == '이름'">
+				mountain_name like #{keyword}
+			</if>
+			<if test="whatColumn == '내용'">
+				mountain_content like #{keyword}
+			</if> 
+			<if test="whatColumn == '지역'">
+				mountain_local like #{keyword}
+			</if>
+		</where>
+		<if test='category != null and category == "height"'>
+			ORDER BY
+				mountain_height desc
+		</if>
+		<if test='category == null'>
+			ORDER BY
+				mountain_num asc
+		</if>
+	</select>
+	<!-- //전체 목록 불러오기 -->
+	
+	<!-- 선택한 산 삭제 -->
+	<delete id="DeleteMountain">
+		DELETE
+			from mountain
+		WHERE
+			mountain_num = #{deleteNum}
+	</delete>
+	<!-- //선택한 산 삭제 -->
+	
+	<!-- 산 정보 업데이트 -->
+		<update id="UpdateMountain">
+			UPDATE
+				mountain
+			SET
+				mountain_name = #{mountainname},
+				mountain_height = #{mountainheight},
+				mountain_local = #{mountainlocal},
+				mountain_content = #{mountaincontent},
+				mountain_image = #{mountainimage},
+				mountain_great = #{mountaingreat, jdbcType=VARCHAR}
+			WHERE
+				mountain_num = #{mountainnum}
+		</update>
+	<!-- //산 정보 업데이트 -->
+	
+	<!-- 해당 번호의 데이터 검색 -->
+		<select id="GetMountainByNum" resultType="com.spring.ex.mountain.model.MountainBean" resultMap="mountainMap">
+			SELECT
+				mountain_num,
+				mountain_name,
+				mountain_height,
+				mountain_local,
+				mountain_content,
+				mountain_image,
+				mountain_great
+			FROM
+				mountain
+			WHERE
+				mountain_num = #{mountainnum}
+		</select>	
+	<!-- //해당 번호의 데이터 검색 -->
+
+	<!-- 산 이름 검색 -->
+		<select id="GetAllMountainName" resultType="com.spring.ex.mountain.model.MountainBean" resultMap="mountainMap">
+			SELECT
+				mountain_num,
+				mountain_name
+			FROM
+				mountain
+		ORDER BY
+			mountain_num asc
+		</select>	
+	<!-- //산 이름 검색 -->
+</mapper>

@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- supporters.xml -->
+
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="supporters.SupportersBean">
+	
+	<!-- resultMapping 설정 꿀팁 -->
+ 	<resultMap type="com.spring.ex.supporters.model.SupportersBean" id="supportersMap">
+		 <id property="num" column="num"/>
+		 <result property="supportersname" column="supporters_name"/>
+		 <result property="startdate" column="start_date"/>
+		 <result property="enddate" column="end_date"/>
+		 <result property="regdate" column="reg_date"/>
+		 <result property="applicantid" column="applicant_id"/>
+	</resultMap>
+	<!-- //resultMapping 설정 -->
+	
+	
+	<select id="GetTotalSupportersCount" resultType="int">
+ 		select count(*) from supporters
+		<if test="whatColumn == 'supporters_name'">
+			where supporters_name like #{keyword} 
+		</if>
+		<if test="whatColumn == 'content'">
+			where content like #{keyword}
+		</if>
+		<if test="whatColumn == 'ing'">
+			<![CDATA[
+	 			where applicant < "LIMIT" AND deadline > TO_CHAR(SYSDATE,'YYYY-MM-DD')
+			]]>
+ 		</if>
+ 		<if test="whatColumn == 'complete'">
+	 		<![CDATA[
+	 			where applicant >= "LIMIT"
+ 			]]>
+ 		</if>
+ 		<if test="whatColumn == 'closed'">
+	 		<![CDATA[
+	 			where deadline < TO_CHAR(SYSDATE,'YYYY-MM-DD')
+ 			]]>
+ 		</if>
+ 		<if test="whatColumn == 'allMember'">
+ 			where target = '0'
+ 		</if>
+ 		<if test="whatColumn == 'bestMember'">
+ 			where target = '1'
+ 		</if>		
+ 	</select>
+	
+	<!--  
+   1. TO_CHAR(start_date, 'YYYY-MM-DD') 함수를 사용해 문자열로 변환함
+   2. deadline이 sysdate(오늘날짜)보다 이전인 경우, state(모집상태)는 2(=모집기한 마감)를 반환하고
+   applicant(신첟인원)이 limit(모집인원)을 초과하는 경우 1(=모집완료)을 반환하고
+   둘 다 아닌 경우엔 0(=모집중)을 반환한다. 
+   3. <![CDATA[ ]]> : mybatis에서는 CDATA을 자주 사용한다. 
+   왜냐하면 xml에서는 <,>,&,|| 같은 부등호를 태그로 인식하기 때문이다.
+   그런데 이렇게 <![CDATA[  ]]> 안에 쿼리를 넣으면 부등호를 태그가 아니라 "문자열"로 인식해서 이제 오류가 안난다!!!
+   4. "LIMIT"는 이렇게 대문자로 써야한다. "limit"로 쓰면 에러가 난다.
+   왜냐하면 "LIMIT"는 SQL 예약어이기 때문.
+   -->
+	<select id="GetAllSupporters" resultMap="supportersMap">
+		select 
+			num, writer, supporters_name,deadline, target, limit, applicant,
+			start_date, end_date,content, reg_date, readcount,
+			<![CDATA[
+			CASE WHEN deadline < TO_CHAR(SYSDATE,'YYYY-MM-DD') then 2
+				WHEN applicant >= "LIMIT" then 1
+				ELSE 0
+				END AS state
+			]]> from supporters su
+		<if test="whatColumn == 'supporters_name'">
+			where supporters_name like #{keyword}
+		</if>
+		<if test="whatColumn == 'content'">
+			where content like #{keyword}
+		</if>
+		<if test="whatColumn == 'ing'">
+			<![CDATA[
+	 			where applicant < "LIMIT" AND deadline > TO_CHAR(SYSDATE,'YYYY-MM-DD')
+			]]>
+ 		</if>
+ 		<if test="whatColumn == 'complete'">
+	 		<![CDATA[
+	 			where applicant >= "LIMIT"
+ 			]]>
+ 		</if>
+ 		<if test="whatColumn == 'closed'">
+	 		<![CDATA[
+	 			where deadline < TO_CHAR(SYSDATE,'YYYY-MM-DD')
+ 			]]>
+ 		</if>
+ 		<if test="whatColumn == 'allMember'">
+ 			where target = '0'
+ 		</if>
+ 		<if test="whatColumn == 'bestMember'">
+ 			where target = '1'
+ 		</if>
+ 		
+ 		order by
+ 		<choose>
+ 			<when test="whatColumn == 'reg_date'">
+ 				reg_date desc
+ 			</when>
+ 			<when test="whatColumn == 'readcount'">
+ 				readcount desc
+ 			</when>
+ 			<otherwise>
+         		num asc
+          </otherwise>
+ 		</choose>
+	</select>
+
+	
+	<insert id="InsertSupporters">
+ 		insert into supporters(num, writer, supporters_name, deadline, target, limit, applicant, start_date, end_date, content, reg_date)
+ 		values(supo_seq.nextval, #{writer}, #{supportersname}, #{deadline}, #{target}, #{limit}, #{applicant}, #{startdate}, #{enddate}, #{content}, sysdate)
+ 	</insert>
+	
+	<select id="CheckSupportersname" resultType="int">
+ 		select count(*) from supporters
+ 		where supporters_name = #{input_name}
+ 	</select>
+ 	
+ 	<update id="UpdateSupoCount">
+        update supporters 
+        set readcount = readcount+1 
+        where num=#{num}
+    </update>
+    
+    <select id="GetSupportersByNum"  resultMap="supportersMap">
+		select num, writer, supporters_name,deadline, target, limit, applicant,
+			TO_CHAR(start_date, 'YYYY-MM-DD')start_date, TO_CHAR(end_date, 'YYYY-MM-DD')end_date,content, reg_date, readcount,
+			<![CDATA[
+			CASE WHEN deadline < TO_CHAR(sysdate,'YYYY-MM-DD') then 2
+				WHEN applicant >= "LIMIT" then 1
+				ELSE 0
+				END AS state
+			]]>
+		from supporters 
+		where num = #{num}
+	</select>
+ 	
+ 	<delete id="DeleteSupporters">
+		delete supporters where num = #{num}
+	</delete>
+ 	
+ 	<update id="UpdateSupporters">
+		update supporters 
+		set supporters_name=#{supportersname}, deadline=#{deadline}, target=#{target}, 
+		limit=#{limit}, applicant=#{applicant}, start_date=#{startdate}, end_date=#{enddate}, content=#{content}
+		where num = #{num}
+	</update>
+	
+	<!-- 서포터즈 삭제하면 회원의 state=1(취소상태)로 바꾸도록 -->
+	<update id="deleteSupportersHistory">
+		update supporters_apply 
+		set state = 1 
+		where join_num = #{num}
+	</update>
+	
+	<!-- 서포터즈명, 번호 조회하기 => 관리자페이지의 select박스에 넣기 위해 -->
+	<select id="GetSupportersListAll" resultMap="supportersMap">
+ 		select num, supporters_name 
+		from supporters
+ 	</select>
+ 	
+ 	<!-- 관리자 페이지 다중 삭제 -->
+	<delete id="DeleteSupportersByAdmin">
+ 		delete from supporters
+ 		where num = #{num}
+ 	</delete>
+ 	
+ 	<!-- 관리자페이지 - 회원 별 신청한 모든 서포터즈를 조회 
+ 	supporters와 supporters_apply 테이블을 조인하고 번호가 같은은것끼리
+ 	-->
+	<select id="GetSupporterList" resultMap="supportersMap">
+		select s.num, s.supporters_name, s.deadline, s.target, s.limit, s.applicant, su.applicant_id,
+			TO_CHAR(s.start_date, 'YYYY-MM-DD')start_date, TO_CHAR(s.end_date, 'YYYY-MM-DD')end_date,
+			<![CDATA[
+			CASE 
+ 				WHEN s.deadline < TO_CHAR(sysdate,'YYYY-MM-DD') then 2
+ 				WHEN s.applicant >= s.limit then 1
+ 				ELSE 0 END 
+			AS state			
+			]]>
+		from supporters s inner join supporters_apply su
+		on s.num = su.join_num	
+		where su.state = 0 
+		<if test="keyword != null">
+			and su.applicant_id like '%' || #{keyword} || '%'
+		</if>
+	</select>
+	
+	
+	<select id="GetAllSupportersCount" resultType="int"> <!-- 총 -->
+ 		select count(*) from supporters
+ 	</select>
+ 	
+	<select id="GetIngSupportersCount" resultType="int"> <!-- 모집중 -->
+		select count(*) from supporters
+		<![CDATA[
+	 		where applicant < "LIMIT" AND deadline > TO_CHAR(SYSDATE,'YYYY-MM-DD')
+		]]>
+ 	</select> 	
+ 	
+ 	<select id="GetCompleteSupportersCount" resultType="int"> <!-- 모집완료 -->
+		select count(*) from supporters
+	 	<![CDATA[
+	 		where applicant >= "LIMIT" AND deadline >= TO_CHAR(SYSDATE,'YYYY-MM-DD')
+ 		]]>
+ 	</select>	
+ 	
+ 	<select id="GetClosedSupportersCount" resultType="int"> <!-- 모집기한 마감 -->
+		select count(*) from supporters
+	 	<![CDATA[
+	 		where deadline < TO_CHAR(SYSDATE,'YYYY-MM-DD')
+ 		]]>
+ 	</select>
+	
+</mapper>
+

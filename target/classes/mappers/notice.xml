@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- notice.xml -->
+
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="notice.NoticeBean">
+	
+	<!--  resultMapping 설정  -->
+	<resultMap type="com.spring.ex.notice.model.NoticeBean" id="noticeMap">
+		<id property="num" column="num"/>
+		<result property="userid" column="user_id"/>
+		<result property="subject" column="subject"/>
+		<result property="content" column="content"/>
+		<result property="regdate" column="reg_date"/>
+		<result property="readcount" column="readcount"/>
+	</resultMap>
+	<!--  //resultMapping 설정  -->
+	
+	<select id="GetTotalCount" resultType="int">
+		select count(*) from notice
+		<if test="whatColumn == 'subject'">
+			where subject like #{keyword} order by num
+		</if>
+		<if test="whatColumn == 'content'">
+			where content like #{keyword} order by num
+		</if>
+		<if test="whatColumn == 'reg_date'">
+ 			order by reg_date desc
+ 		</if>
+ 		<if test="whatColumn == 'readcount'">
+ 			order by readcount desc
+ 		</if>
+	</select>
+	
+	<select id="GetAllNotice" resultMap="noticeMap">
+		select * from notice
+		<if test="whatColumn == 'subject'">
+			where subject like #{keyword} order by num
+		</if>
+		<if test="whatColumn == 'content'">
+			where content like #{keyword} order by num
+		</if>
+		<if test='whatColumn == "reg_date"'>
+ 			order by reg_date desc 
+ 		</if>
+ 		<if test='whatColumn == "readcount"'>
+ 			order by readcount desc 
+ 		</if>
+	</select>
+	
+	<update id="UpdateCount">
+        update notice 
+        set readcount = readcount+1 
+        where num=#{num}
+    </update>
+	
+	<select id="GetNoticeByNum" resultMap="noticeMap">
+		select * from notice where num = #{num}
+	</select>
+  	
+  	<delete id="DeleteNotice">
+		delete from notice
+		where num = #{num}
+	</delete>
+	
+	<insert id="InsertNotice">
+		insert into notice(num, user_id, subject, content, reg_date)
+		values(notice_seq.nextval,#{userid},#{subject},#{content},sysdate)
+	</insert>
+	
+	<update id="UpdateNotice">
+		update notice
+		set user_id=#{userid}, subject=#{subject}, content=#{content} 
+		where num = #{num}
+	</update>
+	
+	<delete id="DeleteNoticeByAdmin">
+ 		delete from notice
+ 		where num = #{num}
+ 	</delete>
+ 	
+</mapper>

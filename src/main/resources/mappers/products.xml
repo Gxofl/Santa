@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+  <mapper namespace="products.ProductsBean">
+ 	<!-- resultMapping -->
+	<resultMap type="com.spring.ex.products.model.ProductsBean" id="productsMap">
+		 <id property="productsnum" column="products_num"/>
+	</resultMap>
+	
+	<resultMap type="com.spring.ex.productscomments.model.ProductsCommentsBean" id="productscommentsMap">
+		 <id property="num" column="num"/>
+		 <result property="relevel" column="re_level"/>
+		 <result property="restep" column="re_step"/>
+		 <result property="regdate" column="reg_date"/>
+		 <result property="deleteyn" column="delete_yn"/>
+	</resultMap>
+	
+	<resultMap type="com.spring.ex.pay.model.PayBean" id="payMap">
+		 <id property="paynum" column="pay_num"/>
+		 <result property="prdnum" column="prd_num"/>
+		 <result property="regdate" column="reg_date"/>
+		 <result property="aprvdate" column="aprv_date"/>
+	</resultMap>
+	<!-- //resultMapping -->
+	
+ 	<insert id="InsertProducts">
+ 		insert into products(products_num, kind, name, price, info, image, seller, inputdate, state, readcount)
+ 		values(prd_seq.nextval, #{kind}, #{name}, #{price}, #{info}, #{image}, #{seller}, sysdate, 0, 0)
+ 	</insert>
+ 	
+ 	<select id="GetAllProducts" resultMap="productsMap">
+ 		select products_num, kind, name, info, price, image, seller, inputdate, state, readcount,
+ 		(select count(*) from products_comments where idx = products_num and delete_yn = 'N') as comments
+		from products
+ 		<if test="whatColumn == 'name'">
+ 			where name like #{keyword}
+ 		</if>
+ 		<if test="whatColumn == 'sell'">
+ 			where kind = 'a'
+ 		</if>
+ 		<if test="whatColumn == 'give'">
+ 			where kind = 'b'
+ 		</if>
+ 		<if test="whatColumn == 'change'">
+ 			where kind = 'c'
+ 		</if>
+ 		<if test="whatColumn == 'loginId'">
+ 			where seller = #{keyword}
+ 		</if>
+ 		<if test="whatColumn == 'state0'">
+ 			where state = 0
+ 		</if>
+ 		<if test="whatColumn == 'state1'">
+ 			where state = 1
+ 		</if>
+ 		<if test='whatColumn == "inputdate"'>
+ 			order by inputdate desc
+ 		</if>
+ 		<if test='whatColumn == "readcount"'>
+ 			order by readcount desc
+ 		</if>
+ 		<if test='whatColumn == "products_comments"'>
+ 			order by comments desc
+ 		</if>
+ 	</select>
+ 	
+ 	<update id="UpdateProductsReadCount">
+ 		update products
+ 		set readcount = readcount + 1
+ 		where products_num = #{num}
+ 	</update>
+ 	
+ 	<select id="GetProductsByNum" resultMap="productsMap">
+ 		select * from products
+ 		where products_num = #{num}
+ 	</select>
+ 	
+ 	<select id="GetProductsTotalCount" resultType="int">
+ 		select count(*) from products
+ 		<if test="whatColumn == 'name'">
+ 			where name like #{keyword}
+ 		</if>
+ 		<if test="whatColumn == 'sell'">
+ 			where kind = 'a'
+ 		</if>
+ 		<if test="whatColumn == 'give'">
+ 			where kind = 'b'
+ 		</if>
+ 		<if test="whatColumn == 'change'">
+ 			where kind = 'c'
+ 		</if>
+ 		<if test="whatColumn == 'loginId'">
+ 			where seller = #{keyword}
+ 		</if>
+ 		<if test="whatColumn == 'state0'">
+ 			where state = 0
+ 		</if>
+ 		<if test="whatColumn == 'state1'">
+ 			where state = 1
+ 		</if>
+ 		<if test='whatColumn == "inputdate"'>
+ 			order by inputdate desc
+ 		</if>
+ 		<if test='whatColumn == "readcount"'>
+ 			order by readcount desc
+ 		</if>
+ 		<if test='whatColumn == "products_comments"'>
+ 			order by comments desc
+ 		</if>
+ 	</select>
+ 	
+ 	<update id="UpdateProductsState">
+ 		update products
+ 		set state = 1
+ 		where products_num = #{productsnum}
+ 	</update>
+ 	
+ 	<update id="UpdateProducts">
+ 		update products
+ 		set kind=#{kind}, name=#{name}, price=#{price}, info=#{info}, image=#{image}
+ 		where products_num = #{productsnum}
+ 	</update>
+ 	
+ 	<delete id="DeleteProductsByNum">
+ 		delete products
+ 		where products_num = #{productsnum}
+ 	</delete>
+ 	
+ 	<update id="REUpdateProducts">
+ 		update products
+ 		set state = 0
+ 		where products_num = #{productsnum}
+ 	</update>
+ 	
+ 	<select id="GetSellProductsById" resultMap="productsMap">
+ 		select A.products_num, A.kind, A.name, A.info, A.price, A.image, A.seller, A.inputdate, A.state, A.readcount, B.state as paystate, B.buyer
+ 		from products A inner join pay B
+ 		on A.products_num = B.prd_num
+ 		where A.kind = 'a' and A.state = 1 and A.seller=#{loginId} and B.state IN(0,1)
+ 	</select>
+ 	
+ 	<delete id="DeleteProductsByAdmin">
+ 		delete products
+ 		where products_num = #{productsnum}
+ 	</delete>
+ 	
+ 	<select id="GetAllProductsByAdmin" resultMap="productsMap">
+ 		select products_num, kind, name, info, price, image, seller, inputdate, state, readcount,
+ 		(select count(*) from products_comments where idx = products_num and delete_yn = 'N') as comments
+		from products
+		<if test='kind == "sell"'>
+			where kind = 'a'
+			<if test="whatColumn == 'name'">
+ 				and name like #{keyword}
+ 			</if>
+ 			<if test="whatColumn == 'seller'">
+ 				and seller like #{keyword}
+ 			</if>
+ 			<if test="whatColumn == 'state0'">
+ 				and state = 0
+ 			</if>
+ 			<if test="whatColumn == 'state1'">
+ 				and state = 1
+ 			</if>
+		</if>
+		<if test='kind == "give"'>
+			where kind = 'b'
+			<if test="whatColumn == 'name'">
+ 				and name like #{keyword}
+ 			</if>
+ 			<if test="whatColumn == 'seller'">
+ 				and seller like #{keyword}
+ 			</if>
+ 			<if test="whatColumn == 'state0'">
+ 				and state = 0
+ 			</if>
+ 			<if test="whatColumn == 'state1'">
+ 				and state = 1
+ 			</if>
+		</if>
+		<if test='kind == "change"'>
+			where kind = 'c'
+			<if test="whatColumn == 'name'">
+ 				and name like #{keyword}
+ 			</if>
+ 			<if test="whatColumn == 'seller'">
+ 				and seller like #{keyword}
+ 			</if>
+ 			<if test="whatColumn == 'state0'">
+ 				and state = 0
+ 			</if>
+ 			<if test="whatColumn == 'state1'">
+ 				and state = 1
+ 			</if>
+		</if>
+		<if test='kind == ""'>
+			<if test="whatColumn == 'name'">
+	 			where name like #{keyword}
+	 		</if>
+			<if test="whatColumn == 'seller'">
+	 			where seller like #{keyword}
+	 		</if>
+	 		<if test="whatColumn == 'state0'">
+	 			where state = 0
+	 		</if>
+	 		<if test="whatColumn == 'state1'">
+	 			where state = 1
+	 		</if>
+		</if>
+ 	</select>
+ 	
+ 	<select id="GetAllProductsById" resultMap="productsMap">
+ 		select products_num, kind, name, info, price, image, seller, inputdate, state, readcount,
+ 		(select count(*) from products_comments where idx = products_num and delete_yn = 'N') as comments
+		from products
+		where seller = #{loginId}
+		<if test='whatColumn == "state0"'>
+			and state = 0
+		</if>
+		<if test='whatColumn == "state1"'>
+			and state = 1
+		</if>
+		<if test='whatColumn == "name"'>
+			and name like #{keyword}
+		</if>
+		<if test='whatColumn == "sell"'>
+			and kind = 'a'
+		</if>
+		<if test='whatColumn == "give"'>
+			and kind = 'b'
+		</if>
+		<if test='whatColumn == "change"'>
+			and kind = 'c'
+		</if>
+ 	</select>
+ 	
+ 	<select id="GetProductsTotalCount_Mypage" resultType="int">
+ 		select count(*) from products
+ 		where seller = #{loginId}
+ 		<if test='whatColumn == "state0"'>
+			and state = 0
+		</if>
+		<if test='whatColumn == "state1"'>
+			and state = 1
+		</if>
+		<if test='whatColumn == "name"'>
+			and name like #{keyword}
+		</if>
+		<if test='whatColumn == "sell"'>
+			and kind = 'a'
+		</if>
+		<if test='whatColumn == "give"'>
+			and kind = 'b'
+		</if>
+		<if test='whatColumn == "change"'>
+			and kind = 'c'
+		</if>
+ 	</select>
+ </mapper>

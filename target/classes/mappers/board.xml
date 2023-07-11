@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- board.xml -->
+
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="board.BoardBean">
+	
+	<!--  resultMapping 설정  -->
+	<resultMap type="com.spring.ex.board.model.BoardBean" id="boardMap">
+		<id property="num" column="num"/>
+		<result property="userid" column="user_id"/>
+		<result property="category" column="category"/>
+		<result property="subject" column="subject"/>
+		<result property="content" column="content"/>
+		<result property="regdate" column="reg_date"/>
+		<result property="readcount" column="readcount"/>
+		<result property="image" column="image"/>
+		<result property="boardcommentscount" column="boardcomments_count"/>
+	</resultMap>
+	<!--  //resultMapping 설정  -->
+	
+	
+	<!-- where 1=1은 "참"을 의미한다 
+	where 1=1를 쓰는 이유 : 조회 등으로 where절을 다르게 작성해줘야 할때 편리해서
+	그리고 count 갯수셀때는 order by절 안써도 됨 -->
+	<select id="GetTotalCount" resultType="int">
+		select count(*) from board board
+		LEFT JOIN (
+			SELECT bnum, count(bnum) reply_cnt
+			FROM board_comments
+			WHERE is_deleted = 'N' 
+			GROUP BY bnum
+		) cmt 
+		ON board.num = cmt.bnum		
+		where 1=1 
+		<if test="whatColumn == 'user_id'">
+			and board.user_id like '%' || #{keyword} || '%' 
+		</if>
+		<if test="whatColumn == 'subject'">
+			and board.subject like '%' || #{keyword} || '%' 
+		</if>
+		<if test="whatColumn == 'content'">
+			and board.content like '%' || #{keyword} || '%' 
+		</if>
+		<if test="whatColumn == 'information'">
+ 			and board.category = '정보' 
+ 		</if>
+ 		<if test="whatColumn == 'review'">
+ 			and board.category = '후기' 
+ 		</if>
+ 		<if test="whatColumn == 'recommend'">
+ 			and board.category = '추천' 
+ 		</if>
+ 		<if test="whatColumn == 'free'">
+ 			and board.category = '잡담' 
+ 		</if>
+ 		<if test="loginId != null"> <!-- 마이페이지의 내 자유게시판 글 조회할때 필요 -->
+ 			and board.user_id = #{loginId}
+ 		</if>
+	</select>
+	
+	
+	<select id="GetAllBoard" resultMap="boardMap">
+		SELECT 
+			board.*,
+			cmt.reply_cnt boardcomments_count
+		FROM board board
+		LEFT JOIN (
+			SELECT bnum, count(bnum) reply_cnt
+			FROM board_comments
+			WHERE is_deleted = 'N' 
+			GROUP BY bnum
+		) cmt ON board.num = cmt.bnum
+		where 1=1
+		<if test="whatColumn == 'user_id'">
+			and board.user_id like '%' || #{keyword} || '%'
+		</if>
+		<if test="whatColumn == 'subject'">
+			<!-- and supporters_name like #{keyword} -->
+			and board.subject like '%' || #{keyword} || '%'
+		</if>
+		<if test="whatColumn == 'content'">
+			and board.content like '%' || #{keyword} || '%'
+		</if>
+		<if test="whatColumn == 'information'">
+ 			and board.category = '정보'
+ 		</if>
+ 		<if test="whatColumn == 'review'">
+ 			and board.category = '후기'
+ 		</if>
+ 		<if test="whatColumn == 'recommend'">
+ 			and board.category = '추천'
+ 		</if>
+ 		<if test="whatColumn == 'free'">
+ 			and board.category = '잡담'
+ 		</if>
+ 		<if test="loginId != null"> <!-- 마이페이지의 내 자유게시판 글 조회할때 필요 -->
+ 			and board.user_id = #{loginId}
+ 		</if>		
+ 		order by 
+ 		<choose>
+          <when test="whatColumn == 'reg_date'">
+         		board.reg_date desc
+          </when>
+          <when test="whatColumn == 'readcount'">
+         		board.readcount desc
+          </when>
+          <when test="whatColumn == 'heart'">
+          		<!-- 좋아요수 정렬은 여기에 구현 -->
+         		board.num asc
+          </when>
+          <when test="whatColumn == 'reply'"> <!-- 댓글 내림차순으로 정렬하면서, null값인건 마지막에 위치하도록 NULLS LAST -->
+         		cmt.reply_cnt desc nulls last 
+          </when>
+          <otherwise>
+         		board.num asc
+          </otherwise>
+        </choose>
+	</select>
+	
+	<insert id="InsertBoard">
+		insert into board(num, user_id, category, subject, content, reg_date, image)
+		values(board_seq.nextval,#{userid},#{category},#{subject},#{content},sysdate,#{image})  
+	</insert>
+	
+	<update id="UpdateCount">
+        update board 
+        set readcount = readcount+1 
+        where num=#{num}
+    </update>
+    
+    <select id="GetBoardByNum"  resultMap="boardMap">
+		select * from board where num = #{num}
+	</select>
+	
+	<delete id="DeleteBoard">
+		delete board where num = #{num}
+	</delete>
+	
+	<update id="UpdateBoard">
+		update board 
+		set user_id=#{userid}, category=#{category}, subject=#{subject},content=#{content},reg_date=sysdate,image=#{image}
+		where num = #{num}
+	</update>
+	
+	<!-- 관리자 페이지 다중 삭제 -->
+	<delete id="DeleteBoardByAdmin">
+ 		delete from board
+ 		where num = #{num}
+ 	</delete>
+ 	
+</mapper>
+
+

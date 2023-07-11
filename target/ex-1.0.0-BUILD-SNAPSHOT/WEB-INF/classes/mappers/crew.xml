@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<!-- <mapper namespace="crew.CrewBean"> -->
+ <mapper namespace="crew">
+ 
+	<!-- resultMapping 설정 -->
+ 	<resultMap type="com.spring.ex.crew.model.CrewBean" id="crewMap">
+		 <id property="crewname" column="crew_name"/>
+		 <result property="crewnum" column="crew_num"/>
+		 <result property="crewcontents" column="crew_contents"/>
+		 <result property="crewlimit" column="crew_limit"/>
+		 <result property="crewnow" column="crew_now"/>
+		 <result property="crewmember" column="crew_member"/>
+		 <result property="crewmanager" column="crew_manager"/>
+		 <result property="regdate" column="reg_date"/>
+	</resultMap>
+	<!-- //resultMapping 설정 -->
+	
+	
+ 	<select id="CheckCrewname" resultType="int"  >
+ 		select count(*) from crew
+ 		where crew_name = #{input_name}
+ 	</select> 
+ 	
+ 	<!-- 
+ 	점(.)쓰면 에러남
+ 	Dots are not allowed in element names, please remove it from crew/user/insert.cr -->
+ 	<insert id="InsertCrew">
+ 		insert into crew(large, small, crew_num, crew_name, crew_contents, crew_limit, crew_now, crew_member, crew_manager, reg_date, state)
+ 		values(#{large}, #{small}, crew_seq.nextval, #{crewname}, #{crewcontents}, #{crewlimit}, 1, #{crewmember}, #{crewmanager}, sysdate, 0)
+ 	</insert>
+ 	
+
+ 	<select id="GetCrewById" resultMap="crewMap">
+ 		select * from crew
+ 		where crew_manager = #{loginId}  
+ 	</select> 
+ 	
+ 	<update id="UpdateCrew">
+ 		update crew
+ 		set crew_member = concat(crew_member, #{crewmember}), crew_now = crew_now+1
+ 		where crew_name = #{crewname}
+ 	</update>
+ 	
+ 	<select id="GetCrewMemberCount" resultMap="crewMap">
+ 		select crew_now, crew_limit from crew
+ 		where crew_name = #{crewname}
+ 	</select>
+ 	
+ 	<update id="UpdateCrewState">
+ 		update crew
+ 		set state = 1
+ 		where crew_name = #{crewname}
+ 	</update>
+ 	
+ 	<select id="GetAllCrewCount" resultType="int">
+ 		select count(*) from crew
+ 	</select>
+ 	<select id="GetMountainCrewCount" resultType="int">
+ 		select count(*) 
+		from crew_board a inner join 
+		(select * from crew where crew_limit>crew_now and small = 'M') b
+		on a.crew_name = b.crew_name
+ 	</select>
+ 	<select id="GetPloggingCrewCount" resultType="int">
+ 		select count(*) 
+ 		from crew_board a inner join
+ 		(select * from crew where crew_limit>crew_now and small = 'P') b
+ 		on a.crew_name = b.crew_name
+ 	</select>
+ 	<select id="GetFinishCrewCount" resultType="int">
+ 		select count(*) from crew
+ 		where crew_limit = crew_now
+ 	</select>
+ 	
+ 	<select id="GetJoinCrewById" resultMap="crewMap">
+ 		select * from crew
+ 		where crew_member like #{loginId}
+ 	</select>
+ 	
+ 	<select id="GetMyPageCrew" resultMap="crewMap">
+ 		select * from crew
+ 		where crew_manager = #{loginId}
+ 		<if test = "large == 1">
+ 			and large = 1
+ 		</if>
+ 		<if test = "large == 2">
+ 			and large = 2
+ 		</if>
+ 	</select>
+ 	
+ 	<select id="GetMyPageJoinCrew" resultMap="crewMap">
+ 		select * from crew
+ 		where crew_manager not like #{loginId} and crew_member like #{loginId}
+ 		<if test = "large == 1"> 
+ 			and large = 1
+ 		</if>
+ 		<if test = "large == 2">
+ 			and large = 2
+ 		</if>
+ 	</select>
+ 	
+ 	<select id="Get1DayCrew" resultMap="crewMap">
+ 		select * from crew where large = 1
+ 		<if test='small == "M"'>
+ 			and small = 'M'
+	 		<if test='whatColumn == "crewname"'>
+	 			and crew_name like #{keyword}
+	 		</if>
+	 		<if test='whatColumn == "crewmanager"'>
+	 			and crew_manager like #{keyword}
+	 		</if>
+ 		</if>
+ 		
+ 		<if test='small == "P"'>
+ 			and small = 'P'
+	 		<if test='whatColumn == "crewname"'>
+		 		and crew_name like #{keyword}
+		 	</if>
+		 	<if test='whatColumn == "crewmanager"'>
+		 		and crew_manager like #{keyword}
+		 	</if>
+ 		</if>
+ 		
+ 		<if test='whatColumn == "crewname"'>
+		 	and crew_name like #{keyword}
+		</if>
+		<if test='whatColumn == "crewmanager"'>
+		 	and crew_manager like #{keyword}
+		</if>
+ 	</select>
+ 	
+ 	
+ 	<select id="GetRegularCrew" resultMap="crewMap">
+ 		select * from crew where large = 2
+ 		<if test='small == "M"'>
+ 			and small = 'M'
+	 		<if test='whatColumn == "crewname"'>
+	 			and crew_name like #{keyword}
+	 		</if>
+	 		<if test='whatColumn == "crewmanager"'>
+	 			and crew_manager like #{keyword}
+	 		</if>
+ 		</if>
+ 		
+ 		<if test='small == "P"'>
+ 			and small = 'P'
+	 		<if test='whatColumn == "crewname"'>
+		 		and crew_name like #{keyword}
+		 	</if>
+		 	<if test='whatColumn == "crewmanager"'>
+		 		and crew_manager like #{keyword}
+		 	</if>
+ 		</if>
+ 		
+ 		<if test='whatColumn == "crewname"'>
+		 	and crew_name like #{keyword}
+		</if>
+		<if test='whatColumn == "crewmanager"'>
+		 	and crew_manager like #{keyword}
+		</if>
+ 	</select>
+ 	
+ 	<update id="WithdrawCrew">
+ 		update crew
+ 		set crew_now = crew_now - 1 and crew_member
+ 		where crew_name = #{crewname}
+ 	</update>
+ 	
+ 	<select id="Get1DayCrewTotalCount" resultType="int">
+ 		select count(*) from crew where large = 1
+ 		<if test='small == "M"'>
+ 			and small = 'M'
+	 		<if test='whatColumn == "crewname"'>
+	 			and crew_name like #{keyword}
+	 		</if>
+	 		<if test='whatColumn == "crewmanager"'>
+	 			and crew_manager like #{keyword}
+	 		</if>
+ 		</if>
+ 		
+ 		<if test='small == "P"'>
+ 			and small = 'P'
+	 		<if test='whatColumn == "crewname"'>
+		 		and crew_name like #{keyword}
+		 	</if>
+		 	<if test='whatColumn == "crewmanager"'>
+		 		and crew_manager like #{keyword}
+		 	</if>
+ 		</if>
+ 		
+ 		<if test='whatColumn == "crewname"'>
+		 	and crew_name like #{keyword}
+		</if>
+		<if test='whatColumn == "crewmanager"'>
+		 	and crew_manager like #{keyword}
+		</if>
+ 	</select> 
+ 	
+ 	<select id="GetRegularCrewTotalCount" resultType="int">
+ 		select count(*) from crew where large = 2
+ 		<if test='small == "M"'>
+ 			and small = 'M'
+	 		<if test='whatColumn == "crewname"'>
+	 			and crew_name like #{keyword}
+	 		</if>
+	 		<if test='whatColumn == "crewmanager"'>
+	 			and crew_manager like #{keyword}
+	 		</if>
+ 		</if>
+ 		
+ 		<if test='small == "P"'>
+ 			and small = 'P'
+	 		<if test='whatColumn == "crewname"'>
+		 		and crew_name like #{keyword}
+		 	</if>
+		 	<if test='whatColumn == "crewmanager"'>
+		 		and crew_manager like #{keyword}
+		 	</if>
+ 		</if>
+ 		
+ 		<if test='whatColumn == "crewname"'>
+		 	and crew_name like #{keyword}
+		</if>
+		<if test='whatColumn == "crewmanager"'>
+		 	and crew_manager like #{keyword}
+		</if>
+ 	</select> 
+ 	
+ 	<!-- 가입한 정기크루 목록 -->
+ 	<select id="GetJoinRegularCrewById" resultMap="crewMap">
+ 		select * from crew
+ 		where large = 2 and crew_member like #{loginId}
+ 	</select>
+ 	<!-- //가입한 정기크루 목록 -->
+ 	
+ 	<update id="UpdateCrewStateByCrewName">
+ 		update crew
+ 		set state = 1
+ 		where crew_name = #{crewname}
+ 	</update>
+ 	
+ 	<!-- 통계 그래프 -->
+ 	<select id="GetAllCrewCount2" resultType="int">
+ 		select count(*) from crew
+ 	</select>
+ 	
+ 	<select id="GetOneDayCrewCount" resultType="int">
+ 		select count(*) from crew
+ 		where large = 1
+ 	</select>
+ 	
+ 	<select id="GetRegularCrewCount" resultType="int">
+ 		select count(*) from crew
+ 		where large = 2
+ 	</select>
+ 	
+ 	<select id="GetMountainCrewCount2" resultType="int">
+ 		select count(*) from crew
+ 		where small = 'M'
+ 	</select>
+ 	
+ 	<select id="GetPloggingCrewCount2" resultType="int">
+ 		select count(*) from crew
+ 		where small = 'P'
+ 	</select>
+ 	<!-- //통계 그래프 -->
+ 	
+ </mapper>

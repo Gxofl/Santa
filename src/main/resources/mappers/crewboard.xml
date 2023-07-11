@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<!--  <mapper namespace="crewboard.CrewBoardBean"> -->
+ <mapper namespace="crewboard">
+ 	
+ 	<!-- resultMapping 설정 -->
+ 	<resultMap type="com.spring.ex.crewboard.model.CrewBoardBean" id="crewboardMap">
+		 <id property="crewboardnum" column="crewboard_num"/>
+		 <result property="crewname" column="crew_name"/>
+		 <result property="regdate" column="reg_date"/>
+		 <result property="crewlimit" column="crew_limit"/>
+		 <result property="crewnow" column="crew_now"/>
+	</resultMap>
+	<!-- //resultMapping 설정 -->
+ 
+ 	<select id="GetAllCrewboard" resultMap="crewboardMap">
+ 		select crewboard_num, cb.large, cb.small, cb.state, cb.crew_name, cb.subject, cb.writer, cb.contents, cb.reg_date, cb.readcount, crew.crew_limit, crew.crew_now,
+ 		(select count(*) from crew_comments where idx = cb.crewboard_num and delete_yn = 'N') as comments
+		from crew_board cb inner join crew
+		on cb.crew_name = crew.crew_name
+		<if test='whatColumn == "all"'>
+ 			where contents like #{keyword} or subject like #{keyword}
+ 		</if>
+ 		<if test='whatColumn == "crewname"'>
+ 			where cb.crew_name like #{keyword}
+ 		</if>
+ 		<if test='whatColumn == "M"'>
+ 			where cb.small = 'M' and cb.crew_name like #{keyword}
+ 		</if>
+ 		<if test='whatColumn == "P"'>
+ 			where cb.small = 'P' and cb.crew_name like #{keyword}
+ 		</if>
+ 		<if test='whatColumn == "1M"'>
+	 		where cb.large = 1 and cb.small = 'M'
+ 		</if>
+ 		<if test='whatColumn == "2M"'>
+	 		where cb.large = 2 and cb.small = 'M'
+ 		</if>
+ 		<if test='whatColumn == "1P"'>
+	 		where cb.large = 1 and cb.small = 'P'
+ 		</if>
+ 		<if test='whatColumn == "2P"'>
+	 		where cb.large = 2 and cb.small = 'P'
+ 		</if>
+ 		<if test='whatColumn == "ING"'>
+	 		where cb.state = 0
+ 		</if>
+ 		<if test='whatColumn == "Finish"'>
+	 		where cb.state = 1
+ 		</if>
+ 		
+ 		<if test='whatColumn == "reg_date"'>
+ 			order by reg_date desc
+ 		</if>
+ 		<if test='whatColumn == "readcount"'>
+ 			order by readcount desc
+ 		</if>
+ 		<if test='whatColumn == "crew_comments"'>
+ 			order by comments desc
+ 		</if>
+ 	</select>
+ 	
+ 	<insert id="InsertCrewboard">
+ 		insert into crew_board(crewboard_num, state, large, small, crew_name, subject, writer, contents, reg_date, readcount)
+ 		values(crewbrd_seq.nextval, 0, #{large}, #{small}, #{crewname}, #{subject}, #{writer}, #{contents}, sysdate, 0)
+ 	</insert>
+ 	
+ 	<select id="GetCrewboardByNum" resultMap="crewboardMap">
+ 		select crewboard_num, cb.large, cb.small, cb.state, cb.crew_name, cb.subject, cb.writer, cb.contents, cb.reg_date, cb.readcount, crew.crew_limit, crew.crew_now,
+ 		(select count(*) from crew_comments where idx = cb.crewboard_num and delete_yn = 'N') as comments
+		from crew_board cb inner join crew
+		on cb.crew_name = crew.crew_name
+		where crewboard_num = #{num}
+ 	</select>
+ 	
+ 	<select id="GetCrewboardByCrewname" resultMap="crewboardMap">
+ 		select crewboard_num, cb.large, cb.small, cb.state, cb.crew_name, cb.subject, cb.writer, cb.contents, cb.reg_date, cb.readcount, crew.crew_limit, crew.crew_now,
+ 		(select count(*) from crew_comments where idx = cb.crewboard_num and delete_yn = 'N') as comments
+		from crew_board cb inner join crew
+		on cb.crew_name = crew.crew_name
+		where cb.crew_name = #{crewname}
+ 	</select>
+ 	
+ 	<update id="UpdateCrewboardState">
+ 		update crew_board
+ 		set state = 1
+ 		where crew_name = #{crewname}
+ 	</update>
+ 	
+ 	<select id="GetCrewBoardTotalCount" resultType="int">
+ 		select count(*) from crew_board
+ 		<if test='whatColumn == "all"'>
+ 			where contents like #{keyword} or subject like #{keyword}
+ 		</if>
+ 		<if test='whatColumn == "crewname"'>
+ 			where crew_name like #{keyword}
+ 		</if>
+ 		<if test='whatColumn == "M"'>
+ 			where small = 'M' and crew_name like #{keyword}
+ 		</if>
+ 		<if test='whatColumn == "P"'>
+ 			where small = 'P' and crew_name like #{keyword}
+ 		</if>
+ 		<if test='whatColumn == "1M"'>
+	 		where large = 1 and small = 'M'
+ 		</if>
+ 		<if test='whatColumn == "2M"'>
+	 		where large = 2 and small = 'M'
+ 		</if>
+ 		<if test='whatColumn == "1P"'>
+	 		where large = 1 and small = 'P'
+ 		</if>
+ 		<if test='whatColumn == "2P"'>
+	 		where large = 2 and small = 'P'
+ 		</if>
+ 		<if test='whatColumn == "ING"'>
+	 		where state = 0
+ 		</if>
+ 		<if test='whatColumn == "Finish"'>
+	 		where state = 1
+ 		</if>
+ 	</select>
+ 	
+ 	<update id="UpdateCrewboard">
+ 		update crew_board
+ 		set subject = #{subject}, contents = #{contents}
+ 		where crewboard_num = #{crewboardnum}
+ 	</update>
+ 	
+ 	<delete id="DeleteCrewboardByNum">
+ 		delete crew_board
+ 		where crewboard_num = #{crewboardnum}
+ 	</delete>
+ 	
+ 	<select id="CheckCrewboard" resultType="int">
+ 		select count(*) from crew_board
+ 		where crew_name = #{crewname}
+ 	</select>
+ 	
+ 	<update id="UpdateReadCount">
+ 		update crew_board
+ 		set readcount = readcount + 1
+ 		where crewboard_num = #{num}
+ 	</update>
+ 		
+ 	<delete id="DeleteCrewBoardByAdmin">
+ 		delete crew_board
+ 		where crewboard_num = #{num}
+ 	</delete>
+ 	
+ 	<select id="GetCrewBoardTotalCount_Mypage" resultType="int">
+ 		select count(*) from crew_board
+ 		where writer = #{loginId}
+ 		<if test='whatColumn == "state0"'>
+			and state = 0
+		</if>
+		<if test='whatColumn == "state1"'>
+			and state = 1
+		</if>
+		<if test='whatColumn == "smallM"'>
+			and small = 'M'
+		</if>
+		<if test='whatColumn == "smallP"'>
+			and small = 'P'
+		</if>
+ 	</select>
+ 	
+ 	<select id="GetAllCrewboardById" resultMap="crewboardMap">
+ 		select crewboard_num, cb.large, cb.small, cb.state, cb.crew_name, cb.subject, cb.writer, cb.contents, cb.reg_date, cb.readcount, crew.crew_limit, crew.crew_now,
+ 		(select count(*) from crew_comments where idx = cb.crewboard_num and delete_yn = 'N') as comments
+		from crew_board cb inner join crew
+		on cb.crew_name = crew.crew_name
+		where cb.writer = #{loginId}
+		<if test='whatColumn == "state0"'>
+			and cb.state = 0
+		</if>
+		<if test='whatColumn == "state1"'>
+			and cb.state = 1
+		</if>
+		<if test='whatColumn == "smallM"'>
+			and cb.small = 'M'
+		</if>
+		<if test='whatColumn == "smallP"'>
+			and cb.small = 'P'
+		</if>
+ 	</select>
+ </mapper>

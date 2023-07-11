@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- supportersapply.xml -->
+
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+
+ <mapper namespace="supportersapply">
+	
+	<!-- resultMapping 설정 -->
+ 	<resultMap type="com.spring.ex.supportersapply.model.SupportersApplyBean" id="supportersapplyMap">
+		 <id property="num" column="num"/>
+		 <result property="supportersname" column="supporters_name"/>
+		 <result property="applicantid" column="applicant_id"/>
+		 <result property="applydate" column="apply_date"/>
+		 <result property="startdate" column="start_date"/>
+		 <result property="enddate" column="end_date"/>		 
+		 <result property="joinnum" column="join_num"/>		 
+	</resultMap>
+	
+	<resultMap type="com.spring.ex.supportersapply.model.SupportersApplyBean" id="applicantMap">
+		 <result property="userId" column="user_id"/>
+		 <result property="name" column="name"/>
+		 <result property="userRole" column="user_role"/>
+		 <result property="gender" column="gender"/>
+		 <result property="birth" column="birth"/>		 
+		 <result property="applydate" column="apply_date"/>		 
+	</resultMap>
+	
+	<!-- //resultMapping 설정 -->
+	
+	
+	<!-- 컨트롤러에서 setJoinNum에 supporters의 num을 넣었으니 #{joinnum}으로 insert 하는게 맞음 -->
+	<insert id="InsertSupportersApply"> 	
+ 		insert into supporters_apply(num, supporters_name, applicant_id, state, target, apply_date, start_date, end_date, join_num)
+		values(suapply_seq.nextval, #{supportersname}, #{applicantid}, 0, 0, sysdate, to_date(#{startdate}, 'YYYY-MM-DD'), to_date(#{enddate}, 'YYYY-MM-DD'), #{joinnum})
+ 	</insert>
+	
+	<!-- 신청하기, 취소하기 버튼을 눌렀을때  -->
+	<!-- join_num, applicant_id, state 3개의 조건이 일치하는 레코드의 갯수를 세는 쿼리 : 신청내역이 있으면 1이 조회됨 -->
+	<!-- state=0은 신청을 한 상태임 
+	resultMap="supportersapplyMap" 이거 넣어서 안되었던거.... -->
+ 	<select id="getApplyCount" resultType="int">
+ 		select count(*) from supporters_apply
+ 		where join_num=#{num} and applicant_id=#{loginId} and state=0
+	</select>
+	
+	<!-- 신청상태(0)인 건만 취소 처리(state=1) -->
+	<update id="cancelSupportersApply">
+		update supporters_apply 
+		set state = 1 
+		where join_num=#{num} and applicant_id=#{loginId} and state=0
+	</update> 	
+	
+	<!-- 해당 서포터즈의 신청인원 -1 하기(넘어온 서포터즈 글번호가 일치하는걸 기준으로) -->
+	<update id="discountSupportersCount">
+		update supporters 
+		set applicant = applicant - 1 
+		where num = #{num}
+	</update>
+	
+	<!-- 해당 서포터즈의 신청인원 +1 하기 -->
+	<update id="addSupportersCount">
+		update supporters 
+		set applicant = applicant + 1 
+		where num = #{num}
+	</update>
+	
+	<!-- 마이페이지 : 내 '전체' 서포터즈 조회 -->
+	<!-- state=0인것만 조회해야 서포터즈 신청 취소를 하면 마이페이지의 내 서포터즈에서도 사라짐 
+	 	 그리고 삭제한 서포터즈 안보이도록
+	-->
+	<select id="GetMySupporters" resultMap="supportersapplyMap">
+ 		select * from supporters_apply
+ 		where applicant_id=#{loginId} AND state=0
+ 	</select>
+ 	
+ 	<!-- 내 '활동중' 서포터즈 조회 -->
+	<select id="GetMySupportersIng" resultMap="supportersapplyMap">
+ 		select * from supporters_apply
+ 		where applicant_id=#{loginId} and state=0 
+ 		<![CDATA[
+ 			and start_date <= sysdate and sysdate <= end_date
+ 		]]>
+ 	</select>
+	
+	<!-- 내 '활동종료' 서포터즈 조회 -->
+	<select id="GetMySupportersEnd" resultMap="supportersapplyMap">
+ 		select * from supporters_apply
+ 		where applicant_id=#{loginId} and state=0 
+ 		<![CDATA[
+ 			and sysdate > end_date
+ 		]]>
+ 	</select>
+ 	
+ 	<!-- 관리자페이지에서 서포터즈 별 '신청회원'들을 조회 
+ 	users와 supporters_apply 조인, 회원과 신청인이 같고, 신청상태(state=0)인 경우만 조회하고
+ 	keyword(서포터즈명)이 일치해야함
+ 	-->
+ 	<select id="GetApplicantList" resultMap="applicantMap" >
+ 		<![CDATA[
+ 		SELECT u.user_id, u.name, u.user_role, u.gender, u.birth, to_char(su.apply_date, 'YYYY-MM-DD') apply_date
+		FROM users u 
+		INNER join supporters_apply su
+		on u.user_id = su.applicant_id
+		where su.state = 0
+		]]>
+		<if test="keyword != '' and keyword != null">
+	 		<![CDATA[
+	 			AND su.supporters_name = #{keyword}
+ 			]]>
+ 		</if>
+ 	</select>
+	
+	<select id="GetSupportersList" resultMap="supportersapplyMap">
+ 		select * from supporters_apply
+ 		where applicant_id=#{loginId} AND state=0
+ 	</select>
+	
+ </mapper>  

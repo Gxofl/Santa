@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans
+	xmlns="http://www.springframework.org/schema/security"
+	xmlns:beans="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+           http://www.springframework.org/schema/security
+           http://www.springframework.org/schema/security/spring-security-3.1.xsd">
+
+	<!--  
+	- <http auto-config='true' use-expressions="true">
+		auto-config='true' 를 설정한것만으로 기본 로그인페이지/ HTTP 기본인증 / 로그아웃기능등을 제공한다. 
+      	use-expressions="true" 는 SpEL 을 사용한다는 의미이다.  
+	- <security:intercept-url> : 특정한 URL에 대한 접근 권한을 설정하는 요소
+    - pattern : url의 패턴
+    - access : 권한 체크
+        - permitAll : 누구나 접근 가능(로그인 사용자, 익명 사용자 모두 접근 가능)
+        - hasRole(String) : 특정 권한을 가지는 사용자만 접근 허용
+        - hasRole('ADMIN') :  ADMIN 권한을 가지고 있는 유저만 접근 가능
+        - hasAnyRole('USER','ADMIN') : USER 또는 ADMIN (주어진)권한을 가지고 있으면 접근 가능
+	
+	* 이때 /favicon.ico은 hasRole('ROLE_ANONYMOUS')" 주지않으면 크롬에서 에러발생시켜서 반드시 줘야함.
+	-->
+	<!-- 로그인 경로 설정 -->
+	<http auto-config='false' use-expressions="true">
+
+		<intercept-url pattern="/favicon.ico" 						access="hasRole('ROLE_ANONYMOUS')" />
+		<intercept-url pattern="/resources/**" 						access="permitAll" />
+		<intercept-url pattern="/resources/bootstrap/**" 			access="permitAll" />
+		
+		<intercept-url pattern="/crew/all/**" 						access="permitAll" />
+		<intercept-url pattern="/crewboard/all/**" 					access="permitAll" />
+		<intercept-url pattern="/crewcomments/all/**" 				access="permitAll" />
+		<intercept-url pattern="/products/all/**" 					access="permitAll" />
+		<intercept-url pattern="/productscomments/all/**"			access="permitAll" />
+		<intercept-url pattern="/qna/all/**" 						access="permitAll" />
+		<intercept-url pattern="/mountain/all/**" 					access="permitAll" />
+		<intercept-url pattern="/board/all/**" 						access="permitAll" />
+		<intercept-url pattern="/boardcomments/all/**"  			access="permitAll" />
+		<intercept-url pattern="/notice/all/**" 					access="permitAll" />
+		<intercept-url pattern="/suppoters/all/**" 					access="permitAll" />
+		<intercept-url pattern="/pay/all/**" 						access="permitAll" />
+		
+		<intercept-url pattern="/login/**" 							access="permitAll" />		
+		
+		<intercept-url pattern="/users/user/**" 					access="hasAnyRole('ROLE_USER','ROLE_ADMIN')" />
+		<intercept-url pattern="/crew/user/**" 						access="hasAnyRole('ROLE_USER','ROLE_ADMIN')" />
+		<intercept-url pattern="/crewboard/user/**" 				access="hasAnyRole('ROLE_USER','ROLE_ADMIN')" />
+		<intercept-url pattern="/crewcomments/user/**" 				access="hasAnyRole('ROLE_USER','ROLE_ADMIN')" />
+		<intercept-url pattern="/products/user/**" 					access="hasAnyRole('ROLE_USER','ROLE_ADMIN')" />
+		<intercept-url pattern="/productscomments/user/**" 			access="hasAnyRole('ROLE_USER','ROLE_ADMIN')" />
+		<intercept-url pattern="/qna/user/**" 						access="hasAnyRole('ROLE_USER','ROLE_ADMIN')" />
+		<intercept-url pattern="/stamp/users/**" 					access="hasAnyRole('ROLE_USER','ROLE_ADMIN')" />
+		<intercept-url pattern="/board/user/**" 					access="hasAnyRole('ROLE_USER','ROLE_ADMIN')" />
+		<intercept-url pattern="/boardcomments/user/**" 			access="hasAnyRole('ROLE_USER','ROLE_ADMIN')" />
+		<intercept-url pattern="/suppoters/user/**" 				access="hasAnyRole('ROLE_USER','ROLE_ADMIN')" />
+		<intercept-url pattern="/stamp/user/**" 					access="hasAnyRole('ROLE_USER','ROLE_ADMIN')" />
+		<intercept-url pattern="/heart/user/**" 					access="hasAnyRole('ROLE_USER','ROLE_ADMIN')" />
+		<intercept-url pattern="/bookmark/user/**" 					access="hasAnyRole('ROLE_USER','ROLE_ADMIN')" />
+		<intercept-url pattern="/pay/user/**" 						access="hasAnyRole('ROLE_USER','ROLE_ADMIN')" />
+		
+		<intercept-url pattern="/admin/admin/**" 					access="hasRole('ROLE_ADMIN')" />
+		<intercept-url pattern="/users/admin/**" 					access="hasRole('ROLE_ADMIN')" />
+		<intercept-url pattern="/qna/admin/**" 						access="hasRole('ROLE_ADMIN')" />
+		<intercept-url pattern="/mountain/admin/**" 				access="hasRole('ROLE_ADMIN')" />
+		<intercept-url pattern="/stamp/admin/**" 					access="hasRole('ROLE_ADMIN')" />
+		<intercept-url pattern="/board/admin/**" 					access="hasRole('ROLE_ADMIN')" />
+		<intercept-url pattern="/notice/admin/**" 					access="hasRole('ROLE_ADMIN')" />
+		<intercept-url pattern="/suppoters/admin/**" 				access="hasRole('ROLE_ADMIN')" />
+		<intercept-url pattern="/pay/admin/**" 						access="hasRole('ROLE_ADMIN')" />
+		
+		<intercept-url pattern="/**" 								access="hasAnyRole('ROLE_USER','ROLE_ADMIN')" />
+		
+
+		<!--  
+		- authentication : 인증
+		- login-page : 로그인 페이지 URL
+		- login-processing-url : 로그인 요청이 전송될 URL
+										사용자가 로그인을 시도하면, 해당 URL로 로그인 요청이 전송됨
+		- default-target-url : 로그인 후 보여질 페이지(성공적으로 로그인 이후 이동한 URL)
+		- authentication-failure-url : 로그인 실패시 보여질 페이지
+		- username-parameter :
+		    - 아이디 입력 필드에 사용될 name
+		    - 사용자의 계정명을 어떤 파라미터명으로 받을 것인지 설정
+		    - <form> - ipnut 태그의 아이디 입력 name과 동일해야한다.
+		- password-parameter :
+		    - 비밀번호 입력 필드에 사용될 password
+		    - 사용자 계정 비밀번호를 어떤 파라미터명으로 받을 것인지 설정
+		    - <form> - input 태그의 비밀번호 입력 name과 동일해야한다. -->
+		<form-login 
+					login-page="/login/all/loginPage.lg" 
+					login-processing-url="/login.lg"
+					authentication-failure-url="/login/all/loginPage.lg?err=true"
+					
+					default-target-url="/users/all/main.lg" 
+					username-parameter="userId"
+					password-parameter="password" />
+
+		<!-- 로그아웃 성공 후 이동할 페이지를 설정 -->
+		<logout invalidate-session="true" logout-url="/logout" logout-success-url="/login/all/loginPage.lg" />
+
+		<!-- 
+		<session-management> : 세션 관리 설정 
+		concurrency-control : 최대 동시 세션 수 및 세션 만료 시 이동할 URL을 설정 
+		<access-denied-handler> : 접근 거부 시 처리할 핸들러를 설정하는 요소  -->
+		<session-management>
+			<!-- 
+			max-sessions="1"  중복 로그인을 방지
+			expired-url="/" 세션이 만료된 경우 리다이렉트될 URL을 설정 -->
+			<concurrency-control max-sessions="1" expired-url="/" />
+		</session-management>
+
+		<access-denied-handler error-page="/login/accessDenied.lg" />
+
+	</http>
+	<!-- //로그인 경로 설정 -->
+
+	<!-- 
+	<authentication-manager>: 사용자 인증 관련 설정을 정의하는 요소
+	<authentication-provider>를 사용하여 인증 방법을 설정 -->
+	<authentication-manager>
+		<authentication-provider>
+
+			<!-- DB연결X, 하드코딩
+			<user-service> 
+				<user name="admin" password="1234" authorities="ROLE_USER,ROLE_ADMIN" /> 
+				<user name="guest" password="1234" authorities="ROLE_USER" /> 
+			</user-service> -->
+			
+			<jdbc-user-service data-source-ref="dataSource"
+				users-by-username-query="SELECT USER_ID as username, 
+		            									password,
+		            									1 as enabled
+		            							   FROM users WHERE USER_ID =? and status = 'Y' "
+		            							   
+				authorities-by-username-query="SELECT USER_ID as username,
+		            										  CASE WHEN USER_ROLE='r99' THEN 'ROLE_ADMIN' 
+		            										       ELSE 'ROLE_USER'
+		            										       END authority
+		            								     FROM users WHERE USER_ID=?  and status = 'Y'" />
+
+
+		</authentication-provider>
+	</authentication-manager>
+
+</beans:beans>

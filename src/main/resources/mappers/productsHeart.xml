@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+ <mapper namespace="productsHeart">
+ 	
+ 	<!-- resultMapping 설정 -->
+ 	<resultMap type="com.spring.ex.heart.products.model.ProductsHeartBean" id="productsHeartMap">
+		<id property="heartId" 				column="heartId"/>
+		<result property="heartId" 			column="heart_id"/>
+		<result property="productsNum" 		column="products_num"/>
+		<result property="userId" 			column="user_id"/>
+		<result property="heartDate" 		column="heart_date"/>
+		<!-- ProductsBean과의 1:1 관계 매핑 -->
+    	<association property="products" resultMap="productsMap"/>
+	</resultMap>
+	<resultMap type="com.spring.ex.products.model.ProductsBean" id="productsMap">
+		 <id property="productsnum" column="products_num"/>
+		 <result property="name" column="name"/>
+		 <result property="price" column="price"/>
+		 <result property="state" column="state"/>
+	</resultMap>
+	
+	<!-- //resultMapping 설정 -->
+ 
+ 	<!-- 좋아요 클릭 여부 확인 -->
+ 	<select id="checkHeart" resultType="int" >
+		SELECT COUNT(*) 
+		FROM products_heart
+    	WHERE products_num = #{productsNum} AND user_id = #{userId}
+ 	</select>
+ 	<!-- //좋아요 클릭 여부 확인 -->
+ 	
+ 	<!-- 좋아요 -->
+ 	<insert id="insertHeart">
+ 		insert into products_heart(
+	 		heart_id,
+		    products_num,
+		    user_id,
+		    heart_date
+		 )
+		 values (
+		 	products_heart_seq.nextval,
+		 	#{productsNum},
+		 	#{userId},
+		 	sysdate
+		 )   
+ 	</insert>
+ 	<!-- //좋아요 -->
+ 	
+ 	<!-- 좋아요 취소 -->
+	<delete id="deleteHeart">
+		delete from products_heart
+ 		where user_id = #{userId} and products_num = #{productsNum}
+ 	</delete>
+ 	<!-- //좋아요 취소 -->
+ 	
+ 	<!-- 게시글의 좋아요 수 count -->
+ 	<select id="getProductsHeartTotal" resultType="int">
+ 		select count(heart_id) 
+		from products_heart
+		WHERE products_num = #{productsNum}
+ 	</select>
+ 	<!-- //게시글의 좋아요 수 count -->
+ 	
+ 	<!-- 게시글 목록에서 좋아요 여부 판단 - String -->
+ 	<select id="getAllProductsHeart" resultType="String">
+ 		select 
+ 			prod.products_num, 
+ 			heart.user_id
+		from 
+			products_heart heart 
+			inner join 
+			products prod
+		on 
+			prod.products_num = heart.products_num
+	      	and
+	      	heart.USER_ID = #{getUserId}
+ 	</select>
+ 	<!-- //게시글 목록에서 좋아요 여부 판단 -->
+ 	
+ 	<!-- 게시글 목록에서 좋아요 여부 판단 - productsHeartMap -->
+ 	<select id="getAllProductsHeart_Map" resultMap="productsHeartMap">
+ 		select 
+ 			prod.products_num, 
+			prod.name,
+			prod.state,
+			heart.heart_date,
+			heart.user_id
+		from 
+			products_heart heart 
+			inner join 
+			products prod
+		on 
+			prod.products_num = heart.products_num
+	      	and
+	      	heart.USER_ID = #{getUserId}
+		order by prod.products_num
+ 	</select>
+ 	<!-- //게시글 목록에서 좋아요 여부 판단 -->
+ </mapper>

@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="qna.QnaBean">
+
+	<resultMap type="com.spring.ex.qna.model.QnaBean" id="qnaMap">
+		<id property="qnanum" column="qna_num"/>
+		<result property="usersid" column="users_id"/>
+		<result property="qnacategory" column="qna_category"/>
+		<result property="qnadate" column="qna_date"/>
+		<result property="qnasubject" column="qna_subject"/>
+		<result property="qnaquestion" column="qna_question"/>
+		<result property="qnaanswer" column="qna_answer"/>
+		<result property="qnaimage" column="qna_image"/>
+	</resultMap>
+	
+	<!-- 전체 갯수-->
+	<select id="GetQnaTotalCount" resultType="int">
+		SELECT
+			count(*)
+		FROM qna
+		<if test="whatColumn == '제목'">
+			WHERE
+				qna_subject like #{keyword}
+		</if>
+		<if test="whatColumn == '카테고리'">
+			WHERE
+				qna_category like #{keyword}
+		</if>
+		<if test="whatColumn == '아이디'">
+			WHERE
+				users_id like #{keyword}
+		</if>
+	</select>
+	<!-- //전체 갯수-->
+	
+	<!-- 전체 목록 -->
+	<select id="GetAllQna" resultType="com.spring.ex.qna.model.QnaBean" resultMap="qnaMap">
+		SELECT
+			qna_num,
+			users_id,
+			qna_category,
+			qna_date,
+			qna_subject,
+			qna_question,
+			qna_answer,
+			qna_image
+		FROM
+			 qna
+		<if test="whatColumn == '제목'">
+			WHERE
+				qna_subject like #{keyword}
+		</if>
+		<if test="whatColumn == '카테고리'">
+			WHERE
+				qna_category like #{keyword}
+		</if>
+		<if test="whatColumn == '아이디'">
+			WHERE
+				users_id like #{keyword}
+		</if>
+		ORDER BY
+			qna_num asc
+	</select>
+	<!-- //전체 목록 -->
+	
+	<!-- 새로운 qna 삽입 -->
+	<insert id="InsertQuestion">
+		INSERT
+			into qna(qna_num, users_id, qna_category,
+			qna_date, qna_subject, qna_question, qna_image)
+		VALUES
+			(qna_seq.nextval, #{usersid}, #{qnacategory}, sysdate,
+			#{qnasubject}, #{qnaquestion}, #{qnaimage})
+	</insert>
+	<!-- //새로운 qna 삽입 -->
+	
+	<!-- 선택한 qna 삭제 -->
+	<delete id="DeleteQna">
+		DELETE
+			from qna
+		WHERE
+			qna_num = #{qnanum}
+	</delete>
+	<!-- //선택한 qna 삭제 -->
+	
+	<!-- qnanum으로 해당 컬럼 검색 -->
+	<select id="GetQnaByNum" resultType="com.spring.ex.qna.model.QnaBean" resultMap="qnaMap">
+		SELECT
+			 *
+			 from qna
+		WHERE
+			qna_num = #{qnanum}
+	</select>
+	<!-- //qnanum으로 해당 컬럼 검색 -->
+	
+	<!-- 답변 등록 -->
+	<update id="InsertAnswer">
+		UPDATE
+			qna
+		SET
+			qna_answer = #{qnaanswer}
+		WHERE
+			qna_num = #{qnanum}	
+	</update>
+	<!-- //답변 등록 -->
+
+	<!-- 질문 수정 -->
+	<update id="UpdateQuestion">
+		UPDATE
+			qna
+		SET
+			qna_subject = #{qnasubject},
+			qna_category = #{qnacategory},
+			qna_question = #{qnaquestion}
+		WHERE
+			qna_num = #{qnanum}
+	</update>
+	<!-- //질문 수정 -->
+	
+</mapper>

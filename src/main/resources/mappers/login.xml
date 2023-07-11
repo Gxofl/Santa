@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+      PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="login">
+
+	<resultMap type="com.spring.ex.users.model.UsersBean" id="UserMap">
+		 <result property="userNum" column="user_num"/>
+		 <result property="userId" column="user_id"/>
+		 <result property="password" column="password"/>
+		 <result property="name" column="name"/>
+		 <result property="gender" column="gender"/>
+		 <result property="email" column="email"/>
+		 <result property="phone" column="phone"/>
+		 <result property="status" column="status"/>
+		 <result property="userRole" column="user_role"/>
+		 <result property="udate" column="udate"/>
+		 <result property="address" column="address"/>
+		 <result property="addressSub" column="address_sub"/>
+	</resultMap>
+
+	
+	<!-- <select id="getInfo" parameterType="com.spring.ex.login.model.UsersBean" 
+						 resultType="com.spring.ex.login.model.UsersBean"> -->
+	 <select id="getInfo" resultMap="UserMap">
+		SELECT 
+				user_num as userNum,
+				user_id as userId,
+				password, 
+				name,
+				gender, 
+				email, 
+				phone, 
+				status, 
+				user_role as userRole, 
+				udate,
+				address, 
+				address_sub as addressSub,
+				image 
+	    FROM users
+	    WHERE user_id = #{userId}
+	</select>
+
+</mapper>

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- boardcomments.xml -->
+
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+ <mapper namespace="boardcomments.BoardCommentsBean">
+ 	
+ 	<!--  resultMapping 설정  -->
+	<resultMap type="com.spring.ex.boardcomments.model.BoardCommentsBean" id="boardcommentsMap">
+		<id property="num" column="num"/>
+		<result property="relevel" column="re_level"/>
+		<result property="restep" column="re_step"/>
+		<result property="isdeleted" column="is_deleted"/>
+		<result property="userid" column="user_id"/>
+		<result property="regdate" column="reg_date"/>
+		<result property="isSecret" column="is_secret"/>
+	</resultMap>
+	<!--  //resultMapping 설정  -->
+ 	
+ 	 	
+ 	<insert id="InsertBoardComments">
+ 		insert into board_comments(num, bnum, ref, re_level, re_step, is_deleted, user_id, content, reg_date, is_secret)
+		values(brcm_seq.nextval, #{bnum}, brcm_seq.currval, 0, 0, 'N', #{userid}, #{content}, sysdate, #{isSecret})
+ 	</insert>
+ 	
+ 	<select id="GetAllBoardComments" resultMap="boardcommentsMap">
+		select * from board_comments 
+		where bnum = #{bnum}
+		order by ref desc, re_step asc
+	</select>
+ 	
+ 	<select id="GetBoardCommentsByBnum" resultMap="boardcommentsMap"> 
+ 		select * from board_comments 
+		where bnum = #{bnum}
+		order by ref desc, re_step asc
+ 	</select>
+ 	
+ 	<update id="DeleteBoardComments">
+ 		update board_comments 
+ 		set is_deleted = #{isdeleted}
+ 		where num = #{num}
+ 	</update>
+ 	
+ 	<update id="UpdateOrginComments">
+ 		update board_comments 
+ 		set re_step = #{restep}+1 
+ 		where ref=#{ref} and re_step>#{restep}
+ 	</update>
+ 	
+ 	<insert id="InsertReplyBoardComments">
+ 		insert into board_comments(num, bnum, ref, re_level, re_step, is_deleted, user_id, content, reg_date, is_secret)
+ 		values(brcm_seq.nextval, #{bnum}, #{ref}, #{relevel}, #{restep}, 'N', #{userid}, #{content}, sysdate, #{isSecret})
+ 	</insert>
+ 	
+ 	<update id="UpdateBoardComments">
+ 		update board_comments
+ 		set content = #{content}
+ 		where num = #{num}
+ 	</update>
+ 	
+ 	<select id="GetBoardCommentsOrgWriter" resultType="String">
+ 		select user_id from board_comments
+ 		where ref=#{ref} and re_level=0
+ 	</select>
+ 	
+ </mapper>  
+ 
+ 
+  
+  
+  
+  
+  

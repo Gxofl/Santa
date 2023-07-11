@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+ <mapper namespace="supportersHeart">
+ 	
+ 	<!-- resultMapping 설정 -->
+ 	<resultMap type="com.spring.ex.heart.supporters.model.SupportersHeartBean" id="supportersHeartMap">
+		<id property="heartId" 				column="heartId"/>
+		<result property="heartId" 			column="heart_id"/>
+		<result property="supportersNum" 	column="supporters_num"/>
+		<result property="userId" 			column="user_id"/>
+		<result property="heartDate" 		column="heart_date"/>
+		<!-- SupportersApplyBean과의 1:1 관계 매핑 -->
+    	<association property="supporters" resultMap="supportersMap"/>
+	</resultMap>
+	<resultMap type="com.spring.ex.supporters.model.SupportersBean" id="supportersMap">
+		 <id property="num" column="num"/>
+		 <result property="supportersname" 	column="supporters_name"/>
+		 <result property="startdate" 		column="start_date"/>
+		 <result property="enddate" 		column="end_date"/>
+		 <result property="regdate" 		column="reg_date"/>
+		 <result property="deadline" 		column="deadline"/>
+	</resultMap>
+	<!-- //resultMapping 설정  -->
+ 
+ 	<!-- 좋아요 클릭 여부 확인 -->
+ 	<select id="checkHeart" resultType="int" >
+		SELECT COUNT(*) 
+		FROM supporters_heart
+    	WHERE supporters_num = #{supportersNum} AND user_id = #{userId}
+ 	</select>
+ 	<!-- //좋아요 클릭 여부 확인 -->
+ 	
+ 	<!-- 좋아요 -->
+ 	<insert id="insertHeart">
+ 		insert into supporters_heart(
+	 		heart_id,
+		    supporters_num,
+		    user_id,
+		    heart_date
+		 )
+		 values (
+		 	supporters_heart_seq.nextval,
+		 	#{supportersNum},
+		 	#{userId},
+		 	sysdate
+		 )   
+ 	</insert>
+ 	<!-- //좋아요 -->
+ 	
+ 	<!-- 좋아요 취소 -->
+	<delete id="deleteHeart">
+		delete from supporters_heart
+ 		where user_id = #{userId} and supporters_num = #{supportersNum}
+ 	</delete>
+ 	<!-- //좋아요 취소 -->
+ 	
+ 	<!-- 게시글의 좋아요 수 count -->
+ 	<select id="getSupportersHeartTotal" resultType="int">
+ 		select count(heart_id) 
+		from supporters_heart
+		WHERE supporters_num = #{supportersNum}
+ 	</select>
+ 	<!-- //게시글의 좋아요 수 count -->
+ 	
+ 	<!-- 게시글 목록에서 좋아요 여부 판단 - String -->
+ 	<select id="getAllSupportersHeart" resultType="String">
+ 		select 
+ 			sprt.num, 
+ 			heart.user_id
+		from 
+			supporters_heart heart 
+			inner join 
+			supporters sprt
+		on 
+			sprt.num = heart.supporters_num
+	      	and
+	      	heart.USER_ID = #{getUserId}
+ 	</select>
+ 	<!-- //게시글 목록에서 좋아요 여부 판단 -->
+ 	
+ 	<!-- 게시글 목록에서 좋아요 여부 판단 - supportersMap -->
+ 	<select id="getAllSupportersHeart_Map" resultMap="supportersHeartMap">
+ 		select 
+ 			prod.products_num, 
+			prod.name,
+			prod.state,
+			heart.heart_date,
+			heart.user_id
+		from 
+			products_heart heart 
+			inner join 
+			products prod
+		on 
+			prod.products_num = heart.products_num
+	      	and
+	      	heart.USER_ID = #{getUserId}
+	      	
+		order by sprt.num
+ 	</select>  
+ 	<!-- //게시글 목록에서 좋아요 여부 판단 -->
+ 	
+ </mapper>

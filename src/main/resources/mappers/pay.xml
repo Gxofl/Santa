@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+ <mapper namespace="pay">
+ 	<!-- resultMapping -->
+	<resultMap type="com.spring.ex.products.model.ProductsBean" id="productsMap">
+		 <id property="productsnum" column="products_num"/>
+	</resultMap>
+	
+	<resultMap type="com.spring.ex.pay.model.PayBean" id="payMap">
+		 <id property="paynum" column="pay_num"/>
+		 <result property="prdnum" column="prd_num"/>
+		 <result property="regdate" column="reg_date"/>
+		 <result property="aprvdate" column="aprv_date"/>
+	</resultMap>
+	<!-- //resultMapping -->
+	
+	<insert id="InsertPay">
+		insert into pay(pay_num, prd_num, buyer, price, reg_date, payment, state)
+		values(pay_seq.nextval, #{prdnum}, #{buyer},
+		(select price from products where products_num = #{prdnum})
+		, sysdate, 'kakaopay', 0)
+	</insert>
+	
+	<select id="GetPayByPrdnum" resultMap="payMap">
+		select * from pay
+		where prd_num = #{prdnum} and state = 0
+	</select>
+	
+	<select id="GetPayByPaynum" resultMap="payMap">
+		select * from pay
+		where pay_num = #{paynum}
+	</select>
+	
+	<select id="GetMyPagePay" resultMap="payMap">
+		select pay_num, prd_num, buyer, name as prdname, A.price, A.reg_date, aprv_date, A.state
+		from pay A inner join products B
+		on A.prd_num = B.products_num
+		where buyer = #{loginId}
+		order by reg_date desc
+	</select>
+	
+	<update id="UpdatePayStateByMySelf">
+		update pay
+		set state = 2, aprv_date = sysdate
+		where pay_num = #{paynum}
+	</update>
+	
+	<select id="GetWaitPay" resultMap="payMap">
+		select pay_num, prd_num, buyer, name as prdname, A.price, A.reg_date, aprv_date, A.state
+		from pay A inner join products B
+		on A.prd_num = B.products_num
+		where A.state = 0
+		order by A.reg_date desc
+	</select>
+	
+	<update id="UpdatePayState">
+		update pay
+		set state = 1, aprv_date = sysdate
+		where pay_num = #{paynum}
+	</update>
+	
+	<select id="GetFinishPay" resultMap="payMap">
+		select pay_num, prd_num, buyer, name as prdname, A.price, A.reg_date, aprv_date, A.state, A.payment
+		from pay A inner join products B
+		on A.prd_num = B.products_num
+		where A.state = 1
+		order by A.reg_date desc
+	</select>
+	
+	<update id="UpdatePayStateByAdmin">
+		update pay
+		set state = 3, aprv_date = sysdate
+		where pay_num = #{paynum}
+	</update>
+	
+	<select id="GetCancelPay" resultMap="payMap">
+		select pay_num, prd_num, buyer, name as prdname, A.price, A.reg_date, A.aprv_date, A.state, A.payment
+		from pay A inner join products B
+		on A.prd_num = B.products_num
+		where A.state = 2 or A.state = 3
+		order by A.aprv_date desc
+	</select>
+ </mapper>

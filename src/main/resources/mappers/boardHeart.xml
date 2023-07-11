@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+ <mapper namespace="boardHeart">
+ 	
+ 	<!-- resultMapping 설정 -->
+ 	<resultMap type="com.spring.ex.heart.board.model.BoardHeartBean" id="boardHeartMap">
+		<id property="heartId" 				column="heartId"/>
+		<result property="heartId" 			column="heart_id"/>
+		<result property="boardNum" 		column="board_num"/>
+		<result property="userId" 			column="user_id"/>
+		<result property="heartDate" 		column="heart_date"/>
+		<!-- BoardBean과의 1:1 관계 매핑 -->
+    	<association property="board" resultMap="boardMap"/>
+	</resultMap>
+	<resultMap type="com.spring.ex.board.model.BoardBean" id="boardMap">
+		<id property="num" 						column="num"/>
+		<result property="userid" 				column="user_id"/>
+		<result property="category" 			column="category"/>
+		<result property="subject" 				column="subject"/>
+		<result property="content" 				column="content"/>
+		<result property="regdate" 				column="reg_date"/>
+		<result property="readcount" 			column="readcount"/>
+		<result property="image" 				column="image"/>
+		<result property="boardcommentscount" 	column="boardcomments_count"/>
+	</resultMap>
+	<!-- //resultMapping 설정 -->
+ 
+ 	<!-- 좋아요 클릭 여부 확인 -->
+ 	<select id="checkHeart" resultType="int" >
+		SELECT COUNT(*) 
+		FROM board_heart
+    	WHERE board_num = #{boardNum} AND user_id = #{userId}
+ 	</select>
+ 	<!-- //좋아요 클릭 여부 확인 -->
+ 	
+ 	<!-- 좋아요 -->
+ 	<insert id="insertHeart">
+ 		insert into board_heart(
+	 		heart_id,
+		    board_num,
+		    user_id,
+		    heart_date
+		 )
+		 values (
+		 	board_heart_seq.nextval,
+		 	#{boardNum},
+		 	#{userId},
+		 	sysdate
+		 )   
+ 	</insert>
+ 	<!-- //좋아요 -->
+ 	
+ 	<!-- 좋아요 취소 -->
+	<delete id="deleteHeart">
+		delete from board_heart
+ 		where user_id = #{userId} and board_num = #{boardNum}
+ 	</delete>
+ 	<!-- //좋아요 취소 -->
+ 	
+ 	<!-- 게시글의 좋아요 수 count -->
+ 	<select id="getBoardHeartTotal" resultType="int">
+ 		select count(heart_id) 
+		from board_heart
+		WHERE board_num = #{boardNum}
+ 	</select>
+ 	<!-- //게시글의 좋아요 수 count -->
+ 	
+ 	<!-- 게시글 목록에서 좋아요 여부 판단 - String -->
+ 	<select id="getAllBoardHeart" resultType="String">
+ 		select 
+ 			board.num, 
+ 			heart.user_id
+		from 
+			board_heart heart 
+			inner join 
+			board board
+		on 
+			board.num = heart.board_num
+	      	and
+	      	heart.USER_ID = #{getUserId}
+ 	</select>
+ 	<!-- //게시글 목록에서 좋아요 여부 판단 -->
+ 	
+ 	<!-- 게시글 목록에서 좋아요 여부 판단 - boardMap -->
+ 	<select id="getAllBoardHeart_Map" resultMap="boardHeartMap">
+ 		select 
+ 			board.num, 
+			board.category,
+			board.subject,
+			board.user_id,
+			heart.heart_date
+		from 
+			board_heart heart 
+			inner join 
+			board board
+		on 
+			board.num = heart.board_num
+	      	and
+	      	heart.USER_ID = #{getUserId}
+		order by board.num
+ 	</select>
+ 	<!-- //게시글 목록에서 좋아요 여부 판단 -->
+ </mapper>
